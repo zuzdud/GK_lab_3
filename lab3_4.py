@@ -9,7 +9,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import numpy as np
 
-N = 30
+N = 20
 matrix = np.zeros((N + 1, N + 1, 3))
 matrixColors = np.zeros((N + 1, N + 1, 3))
 
@@ -83,11 +83,28 @@ def matrixColorValues():
         matrixColors[N - i][N][1] = matrixColors[i][0][1]
         matrixColors[N - i][N][2] = matrixColors[i][0][2]
 
+    r = 0.0
+    g = 0.0
+    b = 0.0
+    
+    for i in range(0, N+1):
+        matrixColors[N][i][0] = r
+        matrixColors[N][i][1] = g
+        matrixColors[N][i][2] = b
+
+        matrixColors[int(N/2)][i][0] = r
+        matrixColors[int(N/2)][i][1] = g
+        matrixColors[int(N/2)][i][2] = b
+
+        matrixColors[0][i][0] = r
+        matrixColors[0][i][1] = g
+        matrixColors[0][i][2] = b
+
 
 def drawJajo():
     for i in range(0, N):
         for j in range(0, N):
-            glBegin(GL_TRIANGLES)
+            glBegin(GL_TRIANGLE_STRIP)
 
             glColor3f(matrixColors[i][j][0], matrixColors[i]
                       [j][1], matrixColors[i][j][2])
@@ -105,14 +122,6 @@ def drawJajo():
                       [j+1][1], matrixColors[i+1][j+1][2])
             glVertex3f(matrix[i+1][j+1][0], matrix[i+1]
                        [j+1][1], matrix[i+1][j+1][2])
-
-            glColor3f(matrixColors[i+1][j][0], matrixColors[i+1]
-                      [j][1], matrixColors[i+1][j][2])
-            glVertex3f(matrix[i+1][j][0], matrix[i+1][j][1], matrix[i+1][j][2])
-
-            glColor3f(matrixColors[i][j+1][0], matrixColors[i]
-                      [j+1][1], matrixColors[i][j+1][2])
-            glVertex3f(matrix[i][j+1][0], matrix[i][j+1][1], matrix[i][j+1][2])
             glEnd()
 
 

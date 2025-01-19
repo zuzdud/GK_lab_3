@@ -12,10 +12,12 @@ N = 50
 matrix = np.zeros((N + 1, N + 1, 3))
 matrixv2 = np.zeros((N + 1, N + 1, 3))
 matrixv3 = np.zeros((N + 1, N + 1, 3))
+matrixv4 = np.zeros((N + 1, N + 1, 3))
+matrixv5 = np.zeros((N + 1, N + 1, 3))
 
 
 def startup():
-    update_viewport(None, 1000, 1000)
+    update_viewport(None, 2000, 1000)
     glClearColor(0.0, 0.0, 0.0, 1.0)
     # mechanizm bufora głębi
     glEnable(GL_DEPTH_TEST)
@@ -59,6 +61,7 @@ def spin(angle):
 # x(u, v) = (-90 * u^5 + 225 * u^4 - 270*u^3 + 180*u^2 -45*u) * cos(pi * v)
 # y(u, v) = 160 * u^4 - 320*u^3 + 160*u^2 -5
 # z(u, v) = (-90 * u^5 + 225 * u^4 - 270*u^3 + 180*u^2 -45*u) * sin(pi * v)
+scale = 0.5
 
 def matrixValues():
     for i in range(0, N+1):
@@ -67,11 +70,11 @@ def matrixValues():
             v = j / N
 
             # x
-            matrix[i][j][0] = 2 * sin(u * pi) * cos(2*pi * v) - 1
+            matrix[i][j][0] = scale * (2 * sin(u * pi) * cos(2*pi * v) - 1)
             # y
-            matrix[i][j][1] = 2.5 * sin(pi * u) * sin(2 * pi * v) - 2
+            matrix[i][j][1] = scale * (2.5 * sin(pi * u) * sin(2 * pi * v) -2)
             # z
-            matrix[i][j][2] = 2 * cos(pi * u)
+            matrix[i][j][2] = scale * 2 * cos(pi * u)
 
 
 def matrixValuesv2():
@@ -81,11 +84,11 @@ def matrixValuesv2():
             v = j / N
 
             # x
-            matrixv2[i][j][0] = 2 * sin(u * pi) * cos(2*pi * v)  + 1
+            matrixv2[i][j][0] = scale * (2 * sin(u * pi) * cos(2*pi * v) + 1)
             # y
-            matrixv2[i][j][1] = 2.5 * sin(pi * u) * sin(2 * pi * v) - 2
+            matrixv2[i][j][1] = scale * (2.5 * sin(pi * u) * sin(2 * pi * v) -2)
             # z
-            matrixv2[i][j][2] = 2 * cos(pi * u)
+            matrixv2[i][j][2] = scale * 2 * cos(pi * u)
 
 
 def matrixValuesv3():
@@ -93,46 +96,150 @@ def matrixValuesv3():
         for j in range(0, N+1):
             u = i / N
             v = j / N
+            fi =  i * 0.25 * pi / N
+
+            rotationMatrix = np.zeros((3, 3))
+
+            rotationMatrix[1][1] = cos(fi)
+            rotationMatrix[0][0] = 1
+            rotationMatrix[1][2] = -sin(fi)
+            rotationMatrix[2][1] = sin(fi)
+            rotationMatrix[2][2] = cos(fi)
+
+            radius = 0.8 # * sin(u * pi) <= circle radius
+
+            # draw a circle on XY plane. Z is zero here.
+            # x
+            matrixv3[i][j][0] = scale * 2 * cos(2*pi * v) * radius
+            # y
+            matrixv3[i][j][1] = scale * 2 * sin(2 * pi * v) * radius
+
+            # rotate the circle around X axis. Z is also filled here, as it becomes non-zero due to rotation around X.
+            matrixv3[i][j] = np.matmul(rotationMatrix, matrixv3[i][j])
+
+            # move the circle along Y axis
+            matrixv3[i][j][1] = matrixv3[i][j][1] + scale * 6 * sin(fi)
+            # move the circle along Z axis
+            matrixv3[i][j][2] = matrixv3[i][j][2] + scale * (5 * cos(pi * u) - 4)
+
+
+def matrixValuesv4():
+    for i in range(0, N+1):
+        for j in range(0, N+1):
+            u = i / N
+            v = j / N
 
             # x
-            matrixv3[i][j][0] = 2 * sin(u * pi) * cos(2*pi * v)
+            matrixv4[i][j][0] = scale * 2 * sin(u * pi) * cos(2*pi * v)
             # y
-            matrixv3[i][j][1] = 2 * sin(pi * u) * sin(2 * pi * v)
+            matrixv4[i][j][1] = scale * (2 * sin(pi * u) * sin(2 * pi * v) + 4.5)
             # z
-            matrixv3[i][j][2] = 5 * cos(pi * u) - 4
+            matrixv4[i][j][2] = scale * (2.5 * cos(pi * u) - 9.5)
+
+
+def matrixValuesv5():
+    for i in range(0, N+1):
+        for j in range(0, N+1):
+            u = i / N
+            v = j / N
+
+            # x
+            matrixv5[i][j][0] = scale * 2 * sin(u * pi) * cos(2*pi * v)
+            # y
+            matrixv5[i][j][1] = scale * (2 * sin(pi * u) * sin(2 * pi * v) - 1)
+            # z
+            matrixv5[i][j][2] = scale * (5 * cos(pi * u) - 4)
 
 
 def drawJajo():
-    glColor3ub(186, 9, 95)
-    for i in range(0, N+1):
-        for j in range(0, N+1):
-            glPointSize(3)
-            glBegin(GL_POINTS)
+    glColor3ub(158, 103, 96)
+    for i in range(0, N):
+        for j in range(0, N):
+            glBegin(GL_TRIANGLES)
             glVertex3f(matrix[i][j][0], matrix[i][j][1], matrix[i][j][2])
+            glVertex3f(matrix[i+1][j][0], matrix[i+1][j][1], matrix[i+1][j][2])
+            glVertex3f(matrix[i][j+1][0], matrix[i][j+1][1], matrix[i][j+1][2])
+
+            glVertex3f(matrix[i+1][j+1][0], matrix[i+1]
+                       [j+1][1], matrix[i+1][j+1][2])
+            glVertex3f(matrix[i+1][j][0], matrix[i+1][j][1], matrix[i+1][j][2])
+            glVertex3f(matrix[i][j+1][0], matrix[i][j+1][1], matrix[i][j+1][2])
             glEnd()
 
-    glColor3ub(186, 9, 95)
-    for i in range(0, N+1):
-        for j in range(0, N+1):
-            glPointSize(3)
-            glBegin(GL_POINTS)
+    glColor3ub(158, 103, 96)
+    for i in range(0, N):
+        for j in range(0, N):
+            glBegin(GL_TRIANGLES)
             glVertex3f(matrixv2[i][j][0], matrixv2[i][j][1], matrixv2[i][j][2])
+            glVertex3f(matrixv2[i+1][j][0], matrixv2[i+1]
+                       [j][1], matrixv2[i+1][j][2])
+            glVertex3f(matrixv2[i][j+1][0], matrixv2[i]
+                       [j+1][1], matrixv2[i][j+1][2])
+
+            glVertex3f(matrixv2[i+1][j+1][0], matrixv2[i+1]
+                       [j+1][1], matrixv2[i+1][j+1][2])
+            glVertex3f(matrixv2[i+1][j][0], matrixv2[i+1]
+                       [j][1], matrixv2[i+1][j][2])
+            glVertex3f(matrixv2[i][j+1][0], matrixv2[i]
+                       [j+1][1], matrixv2[i][j+1][2])
             glEnd()
 
-    glColor4ub(200, 130, 122, 255)
-    for i in range(0, N+1):
-        for j in range(0, N+1):
+    # complex shaft
+    # glColor4ub(200, 130, 122, 255)
+    # for i in range(0, N):
+    #     for j in range(0, N):
 
+    #         if (i < 40):
+    #             glColor4ub(200, 130, 122, 255)
+    #         else:
+    #             glColor3ub(122, 24, 60)
+
+    #         # glPointSize(3)
+    #         glBegin(GL_TRIANGLES)
+    #         glVertex3f(matrixv3[i][j][0], matrixv3[i][j][1], matrixv3[i][j][2])
+    #         glVertex3f(matrixv3[i+1][j][0], matrixv3[i+1][j][1], matrixv3[i+1][j][2])
+    #         glVertex3f(matrixv3[i][j+1][0], matrixv3[i][j+1][1], matrixv3[i][j+1][2])
+
+    #         glVertex3f(matrixv3[i+1][j+1][0], matrixv3[i+1][j+1][1], matrixv3[i+1][j+1][2])
+    #         glVertex3f(matrixv3[i+1][j][0], matrixv3[i+1][j][1], matrixv3[i+1][j][2])
+    #         glVertex3f(matrixv3[i][j+1][0], matrixv3[i][j+1][1], matrixv3[i][j+1][2])
+
+    #         glEnd()
+
+    # glColor3ub(122, 24, 60)
+    # for i in range(0, N):
+    #     for j in range(0, N):
+    #         glBegin(GL_TRIANGLES)
+    #         glVertex3f(matrixv4[i][j][0], matrixv4[i][j][1], matrixv4[i][j][2])
+    #         glVertex3f(matrixv4[i+1][j][0], matrixv4[i+1][j][1], matrixv4[i+1][j][2])
+    #         glVertex3f(matrixv4[i][j+1][0], matrixv4[i][j+1][1], matrixv4[i][j+1][2])
+
+    #         glVertex3f(matrixv4[i+1][j+1][0], matrixv4[i+1]
+    #                    [j+1][1], matrixv4[i+1][j+1][2])
+    #         glVertex3f(matrixv4[i+1][j][0], matrixv4[i+1][j][1], matrixv4[i+1][j][2])
+    #         glVertex3f(matrixv4[i][j+1][0], matrixv4[i][j+1][1], matrixv4[i][j+1][2])
+    #         glEnd()
+    # end of complex shaft
+
+    # simpler shaft
+    glColor3ub(122, 24, 60)
+    for i in range(0, N):
+        for j in range(0, N):
             if (i < 40):
                 glColor4ub(200, 130, 122, 255)
             else:
                 glColor3ub(122, 24, 60)
 
-            glPointSize(3)
-            glBegin(GL_POINTS)
-            glVertex3f(matrixv3[i][j][0], matrixv3[i][j][1], matrixv3[i][j][2])
-            glEnd()
+            glBegin(GL_TRIANGLES)
+            glVertex3f(matrixv5[i][j][0], matrixv5[i][j][1], matrixv5[i][j][2])
+            glVertex3f(matrixv5[i+1][j][0], matrixv5[i+1][j][1], matrixv5[i+1][j][2])
+            glVertex3f(matrixv5[i][j+1][0], matrixv5[i][j+1][1], matrixv5[i][j+1][2])
 
+            glVertex3f(matrixv5[i+1][j+1][0], matrixv5[i+1]
+                       [j+1][1], matrixv5[i+1][j+1][2])
+            glVertex3f(matrixv5[i+1][j][0], matrixv5[i+1][j][1], matrixv5[i+1][j][2])
+            glVertex3f(matrixv5[i][j+1][0], matrixv5[i][j+1][1], matrixv5[i][j+1][2])
+            glEnd()
 
 def render(time):
 
@@ -140,7 +247,7 @@ def render(time):
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
-    spin(time * 180/3.1415)
+    spin(time * 180/3.1415/4)
     axes()
     drawJajo()
 
@@ -172,7 +279,7 @@ def main():
     if not glfwInit():
         sys.exit(-1)
 
-    window = glfwCreateWindow(1000, 1000, __file__, None, None)
+    window = glfwCreateWindow(2000, 1000, __file__, None, None)
     if not window:
         glfwTerminate()
         sys.exit(-1)
@@ -180,6 +287,8 @@ def main():
     matrixValues()
     matrixValuesv2()
     matrixValuesv3()
+    matrixValuesv4()
+    matrixValuesv5()
 
     glfwMakeContextCurrent(window)
     glfwSetFramebufferSizeCallback(window, update_viewport)
